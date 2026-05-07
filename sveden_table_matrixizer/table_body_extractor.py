@@ -2,18 +2,18 @@ from typing import Generator
 
 from bs4 import Tag, ResultSet
 
-from .errors import MultiplyTableBodyError, NoTableBodyError
+from .errors import NoTableBodyError
+from .types import ExtractorOptions
+from .utils import handle_maybe_async
 
 
-async def extract_table_body(table: Tag) -> Tag:
+async def extract_table_body(table: Tag, *, options: ExtractorOptions) -> Tag:
     bodies: ResultSet[Tag] = table.find_all("tbody")
 
     if len(bodies) == 0:
-        # todo: Сделать супрессор
         raise NoTableBodyError
     if len(bodies) > 1:
-        # todo: Сделать супрессор
-        raise MultiplyTableBodyError
+        return await handle_maybe_async(options.on_multiply_table_bodies, bodies)
 
     return bodies[0]
 

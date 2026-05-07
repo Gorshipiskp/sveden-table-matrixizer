@@ -6,10 +6,6 @@ class MultiplyTableHeaderError(Exception):
     pass
 
 
-class NoColumnsInTableHeaderError(Exception):
-    pass
-
-
 class NoTableBodyError(Exception):
     pass
 

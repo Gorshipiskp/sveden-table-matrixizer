@@ -2,18 +2,18 @@ from typing import Generator
 
 from bs4 import Tag, ResultSet
 
-from .errors import NoTableHeaderError, MultiplyTableHeaderError
+from .errors import NoTableHeaderError
+from .types import ExtractorOptions
+from .utils import handle_maybe_async
 
 
-async def extract_table_head(table: Tag) -> Tag:
+async def extract_table_head(table: Tag, *, options: ExtractorOptions) -> Tag:
     heads: ResultSet[Tag] = table.find_all("thead")
 
     if len(heads) == 0:
-        # todo: Сделать супрессор
         raise NoTableHeaderError
     if len(heads) > 1:
-        # todo: Сделать супрессор
-        raise MultiplyTableHeaderError
+        return await handle_maybe_async(options.on_multiply_table_headers, heads)
 
     return heads[0]
 

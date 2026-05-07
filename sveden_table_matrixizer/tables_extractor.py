@@ -1,61 +1,48 @@
-import asyncio
-from dataclasses import dataclass
-
 from bs4 import BeautifulSoup, Tag, ResultSet
 
-from .errors import NoTableHeaderError, NoColumnsInTableHeaderError
+from .def_funcs import MatrixizedTable
+from .errors import NoTableHeaderError, NoTableBodyError
 from .table_body_extractor import extract_table_body_columns, extract_table_body
 from .table_head_extractor import extract_table_head, extract_table_head_columns
-from .utils import get_page_bs4
+from .types import ExtractorOptions
+from .utils import get_page_bs4, handle_maybe_async
 
 
-@dataclass(kw_only=True)
-class MatrixizedTable:
-    head: list[list[Tag]]
-    body: list[list[Tag]]
-    num_columns: int
-
-
-async def matrixize_table(table: Tag) -> MatrixizedTable:
-    head: Tag = await extract_table_head(table)
+async def matrixize_table(table: Tag, options: ExtractorOptions) -> MatrixizedTable:
+    head: Tag = await extract_table_head(table, options=options)
     head_columns: list[list[Tag]] = await extract_table_head_columns(head)
 
-    num_columns: int = len(head_columns)
-
-    if num_columns == 0:
-        # todo: Сделать супрессор
-        raise NoColumnsInTableHeaderError
-
-    body: Tag = await extract_table_body(table)
+    body: Tag = await extract_table_body(table, options=options)
     body_columns: list[list[Tag]] = await extract_table_body_columns(body)
 
     return MatrixizedTable(
         head=head_columns,
-        body=body_columns,
-        num_columns=num_columns,
+        body=body_columns
     )
 
 
 async def extract_tables(page_bs4: BeautifulSoup) -> ResultSet[Tag]:
-    tables = page_bs4.find_all("table")
+    tables: ResultSet[Tag] = page_bs4.find_all("table")
 
     return tables
 
 
-async def matrixize_tables_from_page(url: str) -> list[MatrixizedTable]:
+async def matrixize_tables_from_page(url: str, *, options: ExtractorOptions | None = None) -> list[MatrixizedTable]:
+    if options is None:
+        options = ExtractorOptions()
+
     page_bs4: BeautifulSoup = await get_page_bs4(url)
     tables: ResultSet[Tag] = await extract_tables(page_bs4)
 
+    matrixized_tables: list[MatrixizedTable] = []
     for table in tables:
         try:
-            await matrixize_table(table)
+            matrixized_table: MatrixizedTable = await matrixize_table(table, options=options)
+
+            matrixized_tables.append(matrixized_table)
         except NoTableHeaderError:
-            print(f"SKIPPED: {NoTableHeaderError.__name__}")
+            await handle_maybe_async(options.on_table_no_header, table, matrixized_tables)
+        except NoTableBodyError:
+            await handle_maybe_async(options.on_table_no_body, table, matrixized_tables)
 
-
-async def main():
-    pass
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
+    return matrixized_tables

@@ -1,4 +1,5 @@
-from typing import Literal
+import inspect
+from typing import Literal, Coroutine, TypeVar, Awaitable, Callable
 
 from aiohttp import ClientSession
 from bs4 import BeautifulSoup, Tag
@@ -20,7 +21,7 @@ def clean_str(s: str, *to_save: STR_CLEAN_SYMBOLS) -> str:
     if "\r" not in to_save:
         s = s.replace("\r", " ")
 
-    if "  ":
+    if "  " not in to_save:
         while "  " in s:
             s = s.replace("  ", " ")
 
@@ -28,7 +29,25 @@ def clean_str(s: str, *to_save: STR_CLEAN_SYMBOLS) -> str:
 
 
 def get_text_tag_content(tag: Tag, *to_save: STR_CLEAN_SYMBOLS) -> str:
-    # todo: Сделать возможность выбора способа извлечения (можно вынести в выбор в классе)
     content = tag.get("data-content", tag.text)
 
     return clean_str(content, *to_save)
+
+
+T = TypeVar("T")
+
+
+async def handle_maybe_async(func: Coroutine[..., ..., T] | Callable[..., T | Awaitable[T]] | T, *args, **kwargs) -> T:
+    if inspect.iscoroutinefunction(func):
+        return await func(*args, **kwargs)
+    if inspect.iscoroutine(func):
+        return await func
+    if not inspect.isfunction(func):
+        return func
+
+    result: T = func(*args, **kwargs)
+
+    if inspect.isawaitable(result):
+        return await result
+
+    return result
