@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sveden-table-matrixizer"
+version = "1.0.0"
+description = "Module for convert tables from HTML-pages (/sveden) to matrix of bs4 tags"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+
+authors = [
+    { name = "BestTvGU" }
+]
+
+dependencies = [
+    "beautifulsoup4==4.14.3",
+    "aiohttp"
+]
+
+[tool.setuptools]
+packages = ["sveden_table_matrixizer"]
+
+[tool.setuptools.package-data]
+besttvgu_backend = ["py.typed"]
