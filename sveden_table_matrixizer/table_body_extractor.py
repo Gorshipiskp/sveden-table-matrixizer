@@ -8,7 +8,7 @@ from .utils import handle_maybe_async
 
 
 async def extract_table_body(table: Tag, *, options: ExtractorOptions) -> Tag:
-    bodies: ResultSet[Tag] = table.find_all("tbody")
+    bodies: ResultSet[Tag] = table.find_all("tbody", recursive=False)
 
     if len(bodies) == 0:
         raise NoTableBodyError
@@ -19,7 +19,7 @@ async def extract_table_body(table: Tag, *, options: ExtractorOptions) -> Tag:
 
 
 def body_tr_generator(tr_tag: Tag) -> Generator[tuple[Tag, int, int], None, None]:
-    for td_tag in tr_tag.find_all("td"):
+    for td_tag in tr_tag.find_all("td", recursive=False):
         td_colspan: int = int(td_tag.get("colspan") or 1)
         td_rowspan: int = int(td_tag.get("rowspan") or 1)
 
@@ -27,7 +27,7 @@ def body_tr_generator(tr_tag: Tag) -> Generator[tuple[Tag, int, int], None, None
 
 
 def body_table_generator(table_body: Tag) -> Generator[Generator[tuple[Tag, int, int], None, None], None, None]:
-    for tr_tag in table_body.find_all("tr"):
+    for tr_tag in table_body.find_all("tr", recursive=False):
         yield body_tr_generator(tr_tag)
 
 

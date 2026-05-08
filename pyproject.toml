@@ -16,7 +16,7 @@ authors = [
 
 dependencies = [
     "beautifulsoup4==4.14.3",
-    "aiohttp"
+    "aiohttp==3.13.5"
 ]
 
 [tool.setuptools]

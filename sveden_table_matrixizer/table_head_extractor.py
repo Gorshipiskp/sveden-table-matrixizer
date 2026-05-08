@@ -8,7 +8,7 @@ from .utils import handle_maybe_async
 
 
 async def extract_table_head(table: Tag, *, options: ExtractorOptions) -> Tag:
-    heads: ResultSet[Tag] = table.find_all("thead")
+    heads: ResultSet[Tag] = table.find_all("thead", recursive=False)
 
     if len(heads) == 0:
         raise NoTableHeaderError
@@ -19,7 +19,7 @@ async def extract_table_head(table: Tag, *, options: ExtractorOptions) -> Tag:
 
 
 def head_tr_generator(tr_tag: Tag) -> Generator[tuple[Tag, int, int], None, None]:
-    for th_tag in tr_tag.find_all("th"):
+    for th_tag in tr_tag.find_all("th", recursive=False):
         th_colspan: int = int(th_tag.get("colspan") or 1)
         th_rowspan: int = int(th_tag.get("rowspan") or 1)
 
@@ -27,7 +27,7 @@ def head_tr_generator(tr_tag: Tag) -> Generator[tuple[Tag, int, int], None, None
 
 
 def head_table_generator(table_head: Tag) -> Generator[Generator[tuple[Tag, int, int], None, None], None, None]:
-    for tr_tag in table_head.find_all("tr"):
+    for tr_tag in table_head.find_all("tr", recursive=False):
         yield head_tr_generator(tr_tag)
 
 
