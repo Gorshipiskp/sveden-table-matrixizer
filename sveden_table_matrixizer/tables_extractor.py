@@ -22,7 +22,7 @@ async def matrixize_table(table: Tag, options: ExtractorOptions) -> MatrixizedTa
 
 
 async def extract_tables(page_bs4: BeautifulSoup) -> ResultSet[Tag]:
-    tables: ResultSet[Tag] = page_bs4.find_all("table", recursive=False)
+    tables: ResultSet[Tag] = page_bs4.find_all("table")
 
     return tables
 
